@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "cortex-debug",
+            "request": "launch",
+            "name": "Debug (OpenOCD)",
+            "servertype": "openocd",
+            "cwd": "/home/aaron/CubeMXProjects/MyFirstCubeMXProject",
+            "runToEntryPoint": "main",
+            "executable": "/home/aaron/CubeMXProjects/MyFirstCubeMXProject/build/MyFirstCubeMXProject.elf",
+            "device": "STM32F401RE",
+            "configFiles": [
+                "/usr/share/openocd/scripts/interface/stlink-dap.cfg",
+                "/usr/share/openocd/scripts/target/stm32f4x.cfg"
+            ],
+            "showDevDebugOutput": "raw",
+            "preLaunchTask": "build"  // This references the "build" task in tasks.json
+        }
+    ]
+}

@@ -1,0 +1,4 @@
+{
+    "cortex-debug.gdbPath": "gdb-multiarch", 
+    "makefile.extensionOutputFolder": "./.vscode"
+}
