@@ -1,4 +1,7 @@
 {
     "cortex-debug.gdbPath": "gdb-multiarch", 
-    "makefile.extensionOutputFolder": "./.vscode"
+    "makefile.extensionOutputFolder": "./.vscode",
+    "files.associations": {
+        "stm32f4xx_hal_usart.h": "c"
+    }
 }
