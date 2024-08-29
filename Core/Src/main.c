@@ -84,7 +84,7 @@ int _write(int fd, char* ptr, int len) {
   return -1;
 }
 /* USER CODE END 0 */
-
+int count = 0;
 /**
   * @brief  The application entry point.
   * @retval int
@@ -93,7 +93,10 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-  printf("hello everyon");
+  printf("\n\nhello everyone\n\n");
+  count=count+1;
+  printf("%d", count); // Use %d if count is an integer.
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -133,7 +136,7 @@ int main(void)
   uint32_t now = 0, last_blink = 0, last_print = 0;
   while (1)
   {
-    printf("hello everyone loop");
+    // printf("hello everyone loop\n");
     now = HAL_GetTick();
 
     if (now - last_blink >= 5000) { // Every half second or 500 ms
