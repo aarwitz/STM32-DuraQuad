@@ -6,34 +6,15 @@
             "request": "launch",
             "name": "Debug (OpenOCD)",
             "servertype": "openocd",
-            "cwd": "/home/aaron/CubeMXProjects/MyFirstCubeMXProject",
-            "runToEntryPoint": "main",
-            "executable": "/home/aaron/CubeMXProjects/MyFirstCubeMXProject/build/MyFirstCubeMXProject.elf",
+            "cwd": "${workspaceFolder}",
+            "executable": "/home/aaron/CubeMXProjects/MyFirstCubeMXProject/build/MyFirstCubeMXProject.elf",  // Path to your ELF file
             "device": "STM32F401RE",
             "configFiles": [
-                "/usr/share/openocd/scripts/interface/stlink-dap.cfg",
-                "/usr/share/openocd/scripts/target/stm32f4x.cfg"
+                "interface/stlink.cfg",  // ST-Link interface
+                "target/stm32f4x.cfg"    // STM32F4 target
             ],
-            "showDevDebugOutput": "raw",
-            "preLaunchTask": "build",  // Ensure this task exists in tasks.json
-            "svdFile": "/path/to/STM32F401.svd",  // Optional: Path to SVD file for better register view support
-            "runToMain": true,  // Ensure the debugger halts at main()
-            "stopOnEntry": true,  // Halts at entry point (main)
-            "postRestartCommands": [
-                "monitor reset halt"  // Ensures the target is reset and halted
-            ],
-            "serverLaunchTimeout": 10000,
-            "armToolchainPath": "/path/to/arm-none-eabi-gcc/bin",  // Adjust if needed
-            "config": {
-                "showDevDebugOutput": "raw",  // Provides more detailed output for debugging
-                "interface": "swd",
-                "gdbPath": "/usr/bin/arm-none-eabi-gdb",  // Ensure GDB path is correct
-                "breakAfterReset": true,  // Halt after reset, useful for breakpoints
-                "resetConfig": {
-                    "type": "run",  // Optional: Customize reset type, can be "halt", "init", or "run"
-                    "device": "STM32F401RE"
-                }
-            }
+            "runToMain": true,
+            "stopOnEntry": true
         }
     ]
 }
