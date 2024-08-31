@@ -1,19 +1,8 @@
 # STM32-DuraQuad
-$ gdb-multiarch /home/aaron/CubeMXProjects/MyFirstCubeMXProject/build/MyFirstCubeMXProject.elf
 
-(gdb) target extended-remote :3333   // consider switching to target extended-remote :3333
-(gdb) monitor reset halt
-(gdb) load
-(gdb) monitor reset init
-(gdb) continue // if necessary
+$ git clone --recurse-submodules https://github.com/aarwitz/STM32-DuraQuad.git
+$ cd STM32-DuraQuad
+$ make
 
-Open up another chipd for openocd 
-$ openocd -f /usr/share/openocd/scripts/interface/stlink-dap.cfg -f /usr/share/openocd/scripts/target/stm32f4x.cfg
-
-Open up another terminal to connect to serial
+Open up another terminal to connect to serial for viewing printf's
 $ sudo minicom -D /dev/ttyACM0 -b 115200
-
-
-
-
-####### GDB
