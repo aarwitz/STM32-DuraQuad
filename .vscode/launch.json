@@ -7,7 +7,7 @@
             "name": "Debug (OpenOCD)",
             "servertype": "openocd",
             "cwd": "${workspaceFolder}",
-            "executable": "/home/aaron/CubeMXProjects/MyFirstCubeMXProject/build/MyFirstCubeMXProject.elf",  // Path to your ELF file
+            "executable": "/home/aaron/repos/temp_testingDuraQuad/STM32-DuraQuad/build/MyFirstCubeMXProject.elf",  // Path to your ELF file
             "device": "STM32F401RE",
             "configFiles": [
                 "interface/stlink.cfg",  // ST-Link interface

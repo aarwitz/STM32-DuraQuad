@@ -26,8 +26,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
-#include "/home/aaron/CubeMXProjects/MyFirstCubeMXProject/Core/Inc/bno055_stm32/bno055_stm32.h" 
-#include "/home/aaron/CubeMXProjects/MyFirstCubeMXProject/Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_usart.h" 
+#include "../Inc/bno055_stm32/bno055_stm32.h" 
+#include "../Inc/stm32f4xx_hal_usart.h" 
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,22 +51,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
-// I2C read function
-// int8_t BNO055_I2C_Read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len) {
-//     if (HAL_I2C_Mem_Read(&hi2c1, (dev_addr << 1), reg_addr, I2C_MEMADD_SIZE_8BIT, data, len, HAL_MAX_DELAY) == HAL_OK) {
-//         return BNO055_SUCCESS;
-//     }
-//     return BNO055_ERROR;
-// }
-
-// I2C write function
-// int8_t BNO055_I2C_Write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len) {
-//     if (HAL_I2C_Mem_Write(&hi2c1, (dev_addr << 1), reg_addr, I2C_MEMADD_SIZE_8BIT, data, len, HAL_MAX_DELAY) == HAL_OK) {
-//         return BNO055_SUCCESS;
-//     }
-//     return BNO055_ERROR;
-// }
 
 /* USER CODE END PV */
 
@@ -146,8 +130,8 @@ int main(void)
   {
     // strcpy((char*)buf, "Hello\r\n");
     // HAL_UART_Transmit(&huart2, buf,)
-    bno055_vector_t v = bno055_getVectorEuler();
-    printf("Heading: %.2f Roll: %.2f Pitch: %.2f\r\n", v.x, v.y, v.z);
+    // bno055_vector_t v = bno055_getVectorEuler();
+    // printf("Heading: %.2f Roll: %.2f Pitch: %.2f\r\n", v.x, v.y, v.z);
 
     // printf("Hello world 1\r\n");
     // HAL_UART_Transmit(&huart2, (uint8_t *)"UART is working\r\n", strlen("UART is working\r\n"), HAL_MAX_DELAY);
@@ -164,7 +148,7 @@ int main(void)
     }
 
     if (now - last_print >= 1000) {
-      printf("Tick %lu\r\n", now / 1000);
+      // printf("Tick %lu\r\n", now / 1000);
       last_print = now;
     }
     /* USER CODE END WHILE */
