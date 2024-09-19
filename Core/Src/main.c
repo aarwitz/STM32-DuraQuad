@@ -51,7 +51,22 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+// PID constants (tune these based on your system)
+float Kp = 1.0;  // Proportional gain
+float Ki = 0.1;  // Integral gain
+float Kd = 0.01; // Derivative gain
 
+// PID variables
+float setpoint_pitch = 0.0;  // Desired pitch angle
+float current_pitch = 0.0;   // Current pitch angle from sensor
+float error = 0.0, prev_error = 0.0;
+float integral = 0.0;
+float derivative = 0.0;
+float control_output = 0.0;
+
+// Timing variables for PID calculation
+// uint32_t last_time = HAL_GetTick();
+float dt = 0.0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -77,85 +92,135 @@ int _write(int fd, char* ptr, int len) {
 }
 /* USER CODE END 0 */
 
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
+/* PID constants (tune these for your quadcopter) */
+float Kp_roll = 1.0, Ki_roll = 0.1, Kd_roll = 0.01;
+float Kp_pitch = 1.0, Ki_pitch = 0.1, Kd_pitch = 0.01;
+float Kp_yaw = 1.0, Ki_yaw = 0.1, Kd_yaw = 0.01;
+
+/* PID state variables */
+float roll_setpoint = 0.0, pitch_setpoint = 0.0, yaw_setpoint = 0.0;
+float roll_error = 0.0, pitch_error = 0.0, yaw_error = 0.0;
+float roll_integral = 0.0, pitch_integral = 0.0, yaw_integral = 0.0;
+float roll_derivative = 0.0, pitch_derivative = 0.0, yaw_derivative = 0.0;
+float prev_roll_error = 0.0, prev_pitch_error = 0.0, prev_yaw_error = 0.0;
+
+/* Motor control variables */
+float motor1_output = 0.0, motor2_output = 0.0, motor3_output = 0.0, motor4_output = 0.0;
+
 int main(void)
 {
+    /* MCU Configuration */
+    HAL_Init();
+    SystemClock_Config();
 
-  /* USER CODE BEGIN 1 */
-  // uint8_t buf[12];
-  /* USER CODE END 1 */
+    /* Initialize peripherals */
+    MX_GPIO_Init();
+    MX_USART2_UART_Init();
+    MX_TIM1_Init();
+    MX_TIM2_Init();
+    MX_TIM3_Init();
+    MX_TIM4_Init();
+    MX_I2C1_Init();
 
-  /* MCU Configuration--------------------------------------------------------*/
+    /* Start PWM on all motor timers */
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1); // Motor 1
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); // Motor 2
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); // Motor 3
+    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1); // Motor 4
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+    /* Initialize BNO055 sensor */
+    bno055_assignI2C(&hi2c1);
+    HAL_Delay(100);
+    bno055_setup();
+    HAL_Delay(100);
+    bno055_setOperationModeNDOF();
 
-  /* USER CODE BEGIN Init */
+    uint32_t last_time = HAL_GetTick();
 
-  /* USER CODE END Init */
+    /* Infinite loop */
+    while (1)
+    {
+        uint32_t now = HAL_GetTick();
+        float dt = (now - last_time) / 1000.0f; // Time in seconds
+        last_time = now;
 
-  /* Configure the system clock */
-  SystemClock_Config();
+        /* Read Euler angles from BNO055 sensor */
+        bno055_vector_t v = bno055_getVectorEuler();
+        float current_yaw = v.x;   // Roll angle
+        float current_pitch = v.y;  // Pitch angle
+        float current_roll = v.z;    // Yaw angle
 
-  /* USER CODE BEGIN SysInit */
+        if (current_roll > 180.0f) {
+            current_roll -= 360.0f;
+        }
 
-  /* USER CODE END SysInit */
+        if (current_yaw > 180.0f) {
+            current_yaw -= 360.0f;
+        }
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_USART2_UART_Init();
-  MX_TIM1_Init();
-  MX_I2C1_Init();
-  MX_TIM2_Init();
-  MX_TIM3_Init();
-  MX_TIM4_Init();
-  /* USER CODE BEGIN 2 */
-  HAL_TIM_PWM_Start(&htim1,TIM_CHANNEL_1); // D7
-  HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1); // D12
-  HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_1); // D10
-  HAL_TIM_PWM_Start(&htim4,TIM_CHANNEL_1); // A0
-  bno055_assignI2C(&hi2c1);
-  bno055_setup();
-  bno055_setOperationModeNDOF();
+        if (current_pitch > 180.0f) {
+            current_pitch = 360.0f - current_pitch;
+        }
 
-  /* USER CODE END 2 */
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  uint32_t now = 0, last_blink = 0, last_print = 0;
-  while (1)
-  {
-    // strcpy((char*)buf, "Hello\r\n");
-    // HAL_UART_Transmit(&huart2, buf,)
-    // bno055_vector_t v = bno055_getVectorEuler();
-    // printf("Heading: %.2f Roll: %.2f Pitch: %.2f\r\n", v.x, v.y, v.z);
+        // i am holding it like:
+        /* Board layout:
 
-    // printf("Hello world 1\r\n");
-    // HAL_UART_Transmit(&huart2, (uint8_t *)"UART is working\r\n", strlen("UART is working\r\n"), HAL_MAX_DELAY);
-    HAL_Delay(500);  // Delay to avoid transmission overlap
+                +----------+
+                |         *| RST   PITCH  ROLL    YAW
+            ADR |*        *| SCL
+            INT |*        *| SDA     ^            /->
+            PS1 |*        *| GND     |            |
+            PS0 |*        *| 3VO     Y    Z-->    \-X
+                |         *| VIN
+                +----------+
 
-    now = HAL_GetTick();
+        */
 
-    if (now - last_blink >= 5000) { // Every half second or 500 ms
 
-      HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 
-      last_blink = now;
+        /* Roll PID calculations */
+        roll_error = roll_setpoint - current_roll;
+        roll_integral += roll_error * dt;
+        roll_derivative = (roll_error - prev_roll_error) / dt;
+        float roll_output = Kp_roll * roll_error + Ki_roll * roll_integral + Kd_roll * roll_derivative;
+        prev_roll_error = roll_error;
 
+        /* Pitch PID calculations */
+        pitch_error = pitch_setpoint - current_pitch;
+        pitch_integral += pitch_error * dt;
+        pitch_derivative = (pitch_error - prev_pitch_error) / dt;
+        float pitch_output = Kp_pitch * pitch_error + Ki_pitch * pitch_integral + Kd_pitch * pitch_derivative;
+        prev_pitch_error = pitch_error;
+
+        /* Yaw PID calculations */
+        yaw_error = yaw_setpoint - current_yaw;
+        yaw_integral += yaw_error * dt;
+        yaw_derivative = (yaw_error - prev_yaw_error) / dt;
+        float yaw_output = Kp_yaw * yaw_error + Ki_yaw * yaw_integral + Kd_yaw * yaw_derivative;
+        prev_yaw_error = yaw_error;
+
+        /* Calculate motor outputs */
+        motor1_output = 50 + roll_output + pitch_output - yaw_output;
+        motor2_output = 50 - roll_output + pitch_output + yaw_output;
+        motor3_output = 50 + roll_output - pitch_output + yaw_output;
+        motor4_output = 50 - roll_output - pitch_output - yaw_output;
+
+        /* Ensure motor outputs are within valid range (e.g., 1000 to 2000 for ESCs) */
+        motor1_output = motor1_output < 0 ? 0 : (motor1_output > 255 ? 255 : motor1_output);
+        motor2_output = motor2_output < 0 ? 0 : (motor2_output > 255 ? 255 : motor2_output);
+        motor3_output = motor3_output < 0 ? 0 : (motor3_output > 255 ? 255 : motor3_output);
+        motor4_output = motor4_output < 0 ? 0 : (motor4_output > 255 ? 255 : motor4_output);
+
+        /* Update PWM duty cycle to control motor speeds */
+        __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, motor1_output);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, motor2_output);
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, motor3_output);
+        __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, motor4_output);
+
+        /* Optional: Add a small delay to avoid too frequent updates */
+        HAL_Delay(10);
     }
-
-    if (now - last_print >= 1000) {
-      // printf("Tick %lu\r\n", now / 1000);
-      last_print = now;
-    }
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
 }
 
 /**
