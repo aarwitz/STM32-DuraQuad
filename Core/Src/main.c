@@ -90,7 +90,7 @@ int _write(int fd, char* ptr, int len) {
   }
   return -1;
 }
-/* USER CODE END 0 */
+
 
 /* PID constants (tune these for your quadcopter) */
 float Kp_roll = 1.0, Ki_roll = 0.1, Kd_roll = 0.01;
@@ -106,7 +106,11 @@ float prev_roll_error = 0.0, prev_pitch_error = 0.0, prev_yaw_error = 0.0;
 
 /* Motor control variables */
 float motor1_output = 0.0, motor2_output = 0.0, motor3_output = 0.0, motor4_output = 0.0;
-
+/* USER CODE END 0 */
+/**
+  * @brief  The application entry point.
+  * @retval int
+*/
 int main(void)
 {
     /* MCU Configuration */
@@ -123,21 +127,42 @@ int main(void)
     MX_I2C1_Init();
 
     /* Start PWM on all motor timers */
-    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1); // Motor 1
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); // Motor 2
-    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); // Motor 3
-    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1); // Motor 4
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1); // TIM1, port PA8, nucleo pin D7
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); // TIM2, port PA0-WKUP, nucleo pin D12
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); // TIM3, port PA6, nucleo pin D10
+    HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1); // TIM4, port PB6, nucleo pin A0
+    /*       
+     Front
+        ^  
+        |
+        |(htim1)       (htim2)
+        |  CW            CCW
+       +-------------------+
+       |                   |
+       |                   |
+       |                   |
+       +-------------------+
+        |(htim3)       (htim4)
+        | CCW            CW
+        |
+        v
+    */
 
+    /* USER CODE BEGIN 1 */
     /* Initialize BNO055 sensor */
     bno055_assignI2C(&hi2c1);
     HAL_Delay(100);
     bno055_setup();
     HAL_Delay(100);
     bno055_setOperationModeNDOF();
+    HAL_Delay(1000);  // Add a delay after sensor initialization
+
 
     uint32_t last_time = HAL_GetTick();
+    /* USER CODE END 1 */
 
     /* Infinite loop */
+    /* USER CODE BEGIN WHILE */
     while (1)
     {
         uint32_t now = HAL_GetTick();
@@ -146,9 +171,9 @@ int main(void)
 
         /* Read Euler angles from BNO055 sensor */
         bno055_vector_t v = bno055_getVectorEuler();
-        float current_yaw = v.x;   // Roll angle
+        float current_yaw = v.x;   // Yaw angle
         float current_pitch = v.y;  // Pitch angle
-        float current_roll = v.z;    // Yaw angle
+        float current_roll = v.z;    // Roll angle
 
         if (current_roll > 180.0f) {
             current_roll -= 360.0f;
@@ -220,7 +245,12 @@ int main(void)
 
         /* Optional: Add a small delay to avoid too frequent updates */
         HAL_Delay(10);
+        
+        /* USER CODE END WHILE */
+
+        /* USER CODE BEGIN 3 */
     }
+    /* USER CODE END 3 */
 }
 
 /**
